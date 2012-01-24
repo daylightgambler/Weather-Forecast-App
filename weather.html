@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="adddomloadevent.js"></script>
+    <script type="text/javascript" src="prototype-1-7.js"></script>
+    <script>
+        addDOMLoadEvent(start);
+        var watchProcess = null;
+
+        function start() {
+            Event.observe($('btnInit'), 'click', function(e)     {
+                Event.stop(e);
+                $('data').innerHTML = '';
+                initiate_watchlocation();                
+            }, false);
+            
+            Event.observe($('btnStop'), 'click', function(e)     {
+                Event.stop(e);
+                stop_watchlocation();
+                getWeather();
+            }, false);            
+        }
+        
+        function getWeather()
+        {
+            url = Math.round($('lat').innerHTML*1000000)+','+ Math.round($('lng').innerHTML*1000000);
+            new Ajax.Updater('data', 'process.php', { parameters: {url: url}, method: 'post' });    
+        }
+        
+        function initiate_watchlocation() {
+            if (watchProcess == null) {
+                watchProcess = navigator.geolocation.watchPosition(handle_geolocation_query, handle_errors, {enableHighAccuracy: true, maximumAge: 30000});
+            }
+        }
+        
+        function stop_watchlocation() {
+            if (watchProcess != null)
+            {
+                navigator.geolocation.clearWatch(watchProcess);
+                watchProcess = null;
+            }
+        }
+
+        function initiate_geolocation() {
+            navigator.geolocation.getCurrentPosition(handle_geolocation_query, handle_error);
+        }
+        
+        function handle_errors(error)  
+        {  
+            switch(error.code)  
+            {  
+                case error.PERMISSION_DENIED: alert("user did not share geolocation data");  
+                break;  
+  
+                case error.POSITION_UNAVAILABLE: alert("could not detect current position");  
+                break;  
+  
+                case error.TIMEOUT: alert("retrieving position timed out");  
+                break;  
+  
+                default: alert("unknown error");  
+                break;  
+            }  
+        }
+
+        function handle_geolocation_query(position){
+            $('lat').innerHTML = position.coords.latitude;
+            $('lng').innerHTML = position.coords.longitude;
+            $('accuracy').innerHTML = position.coords.accuracy;            
+        }
+        
+    </script>
+  </head>
+  <body>
+    <div>
+        <p><strong>Instructions:</strong> tap 'get my location', accuracy will improve if gps available and on. When you are happy with accuracy tap 'get my weather'</p>
+        <button id="btnInit" >Get my location</button>
+        <button id="btnStop" >Get my weather</button>
+        <h3>Lat: <span id="lat">?</span> | Lng: <span id="lng">?</span> | Accuracy: <span id="accuracy">?</span>m</h3> 
+        <div id="data">
+            
+        </div>
+    </div>
+  </body>
+</html>
